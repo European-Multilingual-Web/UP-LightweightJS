@@ -97,6 +97,7 @@ export class LanguageMenu implements ILanguageSelect {
 
     const menuArrow = document.createElement('img')
     menuArrow.classList.add('menu-arrow')
+    menuArrow.alt = ""
     menuArrow.src = this.internalOptions.ui.icons.menuIcon
     menuArrow.setAttribute('role', 'presentation')
 
@@ -145,8 +146,9 @@ export class LanguageMenu implements ILanguageSelect {
       this.subscriptions.push(
         this.uiLocalization.subscribe({
           next: () => {
-            optionText.textContent = getLanguageName(item.langCode, this.pluginOptions, this.uiLocalization)
-            option.title = optionText.textContent
+            const languageName = getLanguageName(item.langCode, this.pluginOptions, this.uiLocalization);
+            optionText.textContent = languageName;
+            option.title = languageName;
             if (this.pluginOptions.ui.showLanguagesInNativeLanguage) {
               optionText.setAttribute('lang', item.langCode)
             }
@@ -167,6 +169,8 @@ export class LanguageMenu implements ILanguageSelect {
       if (item.machineTranslated) {
         const img = document.createElement('img')
         img.src = settingsIcon
+        img.alt = ""
+        img.role = "presentation"
 
         this.subscriptions.push(
           this.uiLocalization.subscribe({

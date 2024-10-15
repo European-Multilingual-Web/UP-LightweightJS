@@ -8,10 +8,11 @@ export const pluginOptions: IPluginOptions = {
   api: {
     clientId: null,
     url: 'https://example-test-domain.com',
-    version: 2
+    version: 3
   },
   translation: {
     autoTranslate: true,
+    translateWholePage: false,
     // systems: null,
     targetLanguages: null,
     translateOnlyAllowedTags: false,
@@ -39,7 +40,7 @@ export const pluginOptions: IPluginOptions = {
     alwaysShowOriginalTextInPopup: false,
     showPopupTranslationProvider: true,
     showPopup: true,
-    showLanguagesInNativeLanguage: false,
+    showLanguagesInNativeLanguage: true,
     branding: {
       name: 'Tilde',
       url: '',

@@ -81,24 +81,27 @@ export class SearchEngineOptimization {
   }
 
   private markCanonicalUrl (doc: Document, currentLocale: string, restore = false) {
-    let link = doc.querySelector('link[rel="canonical"]') as HTMLLinkElement
-    if (!link) {
+    let link = doc.querySelector('link[rel="canonical"]') as HTMLLinkElement;
+
+    if (!link && doc.head !== null) {
       link = document.createElement('link')
       doc.head.appendChild(link)
       link.rel = 'canonical'
     }
-    if (restore) {
-      if (link.hasAttribute(ORIGINAL_URL_ATTR)) {
-        link.href = link.getAttribute(ORIGINAL_URL_ATTR)
+    if (link !== null) {
+      if (restore) {
+        if (link.hasAttribute(ORIGINAL_URL_ATTR)) {
+          link.href = link.getAttribute(ORIGINAL_URL_ATTR)
+        }
       }
-    }
-    else {
-      const localizedUrl = this.localizeUrl(new URL(doc.URL), currentLocale)
-
-      if (!link.hasAttribute(ORIGINAL_URL_ATTR)) {
-        link.setAttribute(ORIGINAL_URL_ATTR, link.href || doc.location.href)
+      else {
+        const localizedUrl = this.localizeUrl(new URL(doc.URL), currentLocale)
+  
+        if (!link.hasAttribute(ORIGINAL_URL_ATTR)) {
+          link.setAttribute(ORIGINAL_URL_ATTR, link.href || doc.location.href)
+        }
+        link.href = localizedUrl
       }
-      link.href = localizedUrl
     }
   }
 
@@ -108,15 +111,17 @@ export class SearchEngineOptimization {
 
     for (const locale of availableLocales) {
       const localizedUrl = this.localizeUrl(new URL(doc.URL), locale)
-      const existingLink = doc.head.querySelector(`link[rel="alternate"][hreflang="${locale}"]`)
+      if (doc.head !== null) {
+        const existingLink = doc.head.querySelector(`link[rel="alternate"][hreflang="${locale}"]`)
 
-      if (!existingLink) {
-        link = document.createElement('link')
-        link.rel = 'alternate'
-        link.hreflang = locale
-        link.href = localizedUrl
-
-        doc.head.appendChild(link)
+        if (!existingLink) {
+          link = document.createElement('link')
+          link.rel = 'alternate'
+          link.hreflang = locale
+          link.href = localizedUrl
+  
+          doc.head.appendChild(link)
+        }
       }
     }
   }

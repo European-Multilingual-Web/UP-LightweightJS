@@ -607,6 +607,7 @@ class DOMTranslation {
    */
   private restoreElementTranslation (range: TranslationTextRange) {
     const translatedSegment = this.translatedSegments.get(range.startMarker)
+
     if (translatedSegment) {
       const originalHTML = DOMExtensions.stringToElement(translatedSegment.source)
 
@@ -720,6 +721,7 @@ class DOMTranslation {
 
     const sourceParent = sourceElement.parentElement
     let nextTarget: Node
+
     while (sourceElement || targetElement) {
       if (sourceElement && (sourceElement.nodeName === TEXT_MARKER_START_TAG)) {
         sourceElement = sourceElement.nextSibling
@@ -1037,6 +1039,8 @@ class DOMTranslation {
     sourceLanguage:string,
     mode: TranslationElementMode
   ) {
+    const forceVisibility = this.pluginOptions.translation.translateWholePage && mode === TranslationElementMode.VISIBLE_ELEMENTS;
+
     this.collectTextElementsChunked(
       translatableParentElements,
       translatableElements,
@@ -1045,10 +1049,23 @@ class DOMTranslation {
       true,
       true,
       mode,
-      false,
+      forceVisibility,
       element as HTMLElement,
       true
     )
+  }
+
+  private addUserElementToCollection (collection: Set<HTMLElement>, element) {
+    if (
+      element.nodeType === Node.ELEMENT_NODE && (
+        element.nodeName === RAW_TEXT_NODE_WRAPPER_TAG ||
+        element.nodeName === TEXT_MARKER_START_TAG ||
+        element.nodeName === TEXT_MARKER_END_TAG
+      )
+    ) {
+      return
+    }
+    collection.add(element)
   }
 
   /**
@@ -1100,7 +1117,6 @@ class DOMTranslation {
         // Don't translate child elements of website translator
         return
       }
-
       if (currentSourceLangSame && currentIsTranslatable) {
         if (mode === TranslationElementMode.VISIBLE_ELEMENTS) {
           if (element.nodeType === Node.ELEMENT_NODE && DOMExtensions.elementIsVisible(element, this.registredIframes)) {
@@ -1108,21 +1124,23 @@ class DOMTranslation {
             if (element.nodeName === 'SELECT') {
               forceVisibility = true
             }
-            translatableElements.add(element)
+
+            this.addUserElementToCollection(translatableElements, element)
           }
         }
         else if (mode === TranslationElementMode.METADATA_ELEMENTS) {
           const hasSeoAttributes = this.getTranslatableAttributes(element)
             .some(item => item.type === TranslatableItemType.ATTRIBUTE_SEO)
+
           if (hasSeoAttributes) {
-            translatableElements.add(element)
+            this.addUserElementToCollection(translatableElements, element)
           }
         }
         else if (mode === TranslationElementMode.URLS) {
           if (element.nodeType === Node.ELEMENT_NODE) {
             const htmlElement = (element as HTMLElement)
             if (htmlElement.parentNode.nodeName !== 'HEAD' && htmlElement.hasAttribute('HREF')) {
-              translatableElements.add(element)
+              this.addUserElementToCollection(translatableElements, element)
             }
           }
         }
@@ -1169,8 +1187,8 @@ class DOMTranslation {
               const metadataChildAllowed = mode === TranslationElementMode.METADATA_ELEMENTS && TranslationElementCandidates.get(element.parentElement.nodeName)?.type === TranslatableItemType.ELEMENT_SEO
 
               if (visibleChildAllowed || metadataChildAllowed || forceVisibility) {
-                translatableParentElements.add(currentParent)
-                translatableElements.add(element)
+                this.addUserElementToCollection(translatableParentElements, currentParent)
+                this.addUserElementToCollection(translatableElements, element)
               }
             }
           }
